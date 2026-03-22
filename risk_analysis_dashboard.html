@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Risk Analysis & Forecast Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    font-family: Arial;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 20px;
+}
+h1 { text-align: center; }
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.card {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.controls {
+    margin-bottom: 20px;
+    background: #1e293b;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+input { width: 100%; }
+</style>
+</head>
+
+<body>
+
+<h1>⚠️ Risk Analysis & Bankruptcy Forecast Dashboard</h1>
+
+<div class="controls">
+    <h3>⚙️ Risk Scenario Controls</h3>
+
+    <label>Economic Stress (%)</label>
+    <input type="range" id="stress" min="0" max="50" value="10">
+
+    <label>Debt Increase (%)</label>
+    <input type="range" id="debt" min="0" max="30" value="5">
+
+    <label>Market Volatility (%)</label>
+    <input type="range" id="volatility" min="0" max="40" value="10">
+
+    <label>Forecast Years</label>
+    <input type="range" id="years" min="1" max="10" value="5">
+
+    <button onclick="runRiskForecast()">Run Risk Analysis</button>
+</div>
+
+<div class="grid">
+
+    <div class="card">
+        <h3>📉 Bankruptcy Risk Trend</h3>
+        <canvas id="riskChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h3>⚠️ High Risk Companies (%)</h3>
+        <canvas id="highRiskChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h3>📊 Risk Distribution</h3>
+        <canvas id="distributionChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h3>🔮 Failure Probability Forecast</h3>
+        <canvas id="probChart"></canvas>
+    </div>
+
+</div>
+
+<script>
+
+// Charts
+let riskChart = new Chart(document.getElementById("riskChart"), {
+    type: "line",
+    data: { labels: [], datasets: [{ label:"Avg Risk Score", data:[], borderColor:"#ef4444"}]}
+});
+
+let highRiskChart = new Chart(document.getElementById("highRiskChart"), {
+    type: "line",
+    data: { labels: [], datasets: [{ label:"High Risk %", data:[], borderColor:"#f59e0b"}]}
+});
+
+let distributionChart = new Chart(document.getElementById("distributionChart"), {
+    type: "bar",
+    data: {
+        labels: ["Low", "Medium", "High"],
+        datasets: [{
+            label: "Risk Distribution",
+            data: [40, 35, 25],
+            backgroundColor: ["#22c55e","#f59e0b","#ef4444"]
+        }]
+    }
+});
+
+let probChart = new Chart(document.getElementById("probChart"), {
+    type: "line",
+    data: { labels: [], datasets: [{ label:"Failure Probability", data:[], borderColor:"#38bdf8"}]}
+});
+
+// Simulation Logic
+function runRiskForecast() {
+
+    let stress = document.getElementById("stress").value / 100;
+    let debt = document.getElementById("debt").value / 100;
+    let volatility = document.getElementById("volatility").value / 100;
+    let years = parseInt(document.getElementById("years").value);
+
+    let risk = 0.3; // baseline risk
+    let highRisk = 20;
+
+    let riskData = [];
+    let highRiskData = [];
+    let probData = [];
+    let labels = [];
+
+    for (let i = 1; i <= years; i++) {
+
+        // Risk increases with stress factors
+        risk += (stress * 0.5) + (debt * 0.3) + (volatility * 0.4);
+
+        // High-risk companies %
+        highRisk += risk * 10;
+
+        // Probability of failure
+        let prob = Math.min(100, risk * 100);
+
+        riskData.push((risk * 100).toFixed(2));
+        highRiskData.push(Math.min(100, highRisk).toFixed(2));
+        probData.push(prob.toFixed(2));
+        labels.push("Year " + i);
+    }
+
+    updateChart(riskChart, labels, riskData);
+    updateChart(highRiskChart, labels, highRiskData);
+    updateChart(probChart, labels, probData);
+}
+
+// Helper
+function updateChart(chart, labels, data) {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = data;
+    chart.update();
+}
+
+// Initial run
+runRiskForecast();
+
+</script>
+
+</body>
+</html>
